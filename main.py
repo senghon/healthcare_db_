@@ -1,10 +1,23 @@
 # server_b.py
 from fastapi import FastAPI
+from sqlalchemy import create_engine, text
+import openai
+import os
 import uvicorn
 import pymssql
-
 #uvicorn server_b:app --host 0.0.0.0 --port 8011
 app = FastAPI()
+
+# DB 연결 설정
+login_dta = {
+    'server': 'localhost',
+    # 'port': '1433',
+    'database': 'efmain'
+    # 'username': 'senghon',
+    # 'password': 'yy5625'
+}
+# engine = create_engine(f"mssql+pymssql://{login_dta['username']}:{login_dta['password']}@{login_dta['server']}:{login_dta['port']}/{login_dta['database']}")
+engine = create_engine(f"mssql+pymssql://{login_dta['server']}/{login_dta['database']}")
 
 @app.get("/response")
 async def response_from_b():
