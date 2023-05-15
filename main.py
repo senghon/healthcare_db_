@@ -3,7 +3,7 @@ from fastapi import FastAPI
 import uvicorn
 import pymssql
 
-#uvicorn server_b:app --host 0.0.0.0 --port 8010
+#uvicorn server_b:app --host 0.0.0.0 --port 8011
 app = FastAPI()
 
 @app.get("/response")
@@ -47,4 +47,4 @@ def today_patients_list():
         return pt_info
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8010)
+    uvicorn.run(app, host="0.0.0.0", port=8011)
