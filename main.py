@@ -5,8 +5,20 @@ import openai
 import os
 import uvicorn
 import pymssql
-#uvicorn server_b:app --host 0.0.0.0 --port 8011
+#uvicorn main:app --host 0.0.0.0 --port 8011
 app = FastAPI()
+
+#openai key
+openai.api_key = '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'
+# ##openai
+def get_completion(prompt, model="gpt-3.5-turbo-0301"):
+    messages = [{"role": "user", "content": prompt}]
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=messages,
+        temperature=0.7, # this is the degree of randomness of the model's output
+    )
+    return response.choices[0].message["content"]
 
 # DB 연결 설정
 login_dta = {
@@ -59,6 +71,70 @@ def today_patients_list():
             })
 
         return pt_info
+    
+
+#환자 클릭시 개별 환자 정보 get
+@app.get('/{patient_id}/{vsid}')
+def patient_info(patient_id,vsid):
+    prompt = f"""
+    너는 일종의 요약 작업을 진행 해야되\
+    요약 작업을 진행하는 데이터의 종류는 수의사가 건강검진을 진행한 동물의 전자차트 내 SOAP 데이터야\
+    너는 이 데이터를 받아서 다음과 같은 딕셔너리 형식으로 요약해 줘야해.\
+    보호자가 봐야하는 리포트니까 무드는 최대한 친절해야해\
+    전문용어는 사용하지 마\
+    
+    -
+    신체검사 결과 : 
+    혈액검사 결과 : 
+    영상검사 결과 : 
+    전체 결과 및 관리 방안 :
+    -
+    니가 작업을 수행할 데이터는 '''{patient_subject(patient_id,vsid)}'''
+    """
+    examresult = {
+        'subject' : patient_subject(patient_id,vsid),
+        'chatgpt' : get_completion(prompt),
+        'bloodtest' : paitent_bloodtest(patient_id,vsid)
+    }
+    return examresult
+
+# ## patient blood test 결과 
+def paitent_bloodtest(patient_id,vsid) :
+    with engine.connect() as conn:
+        bloodtest = []
+        query = text(f"""
+            SELECT hlbdesc,hlbresult,hlbunit
+            FROM dbo.hlb
+            WHERE hlbptid = '{patient_id}' AND hlbvsid = '{vsid}'
+        """)
+        result = conn.execute(query)
+        if result:
+            for i in result :
+                bloodresult = {
+                    'name' : i[0],
+                    'result' : i[1],
+                    'unit' : i[2]
+                }
+                bloodtest.append(bloodresult)
+            return bloodtest
+        else:
+            return None
+
+## patient subject 데이터 전송
+def patient_subject(patient_id,vsid):
+    with engine.connect() as conn:
+        query = text(f"""
+            SELECT hsetxtcont
+            FROM dbo.hse
+            WHERE hseptid = '{patient_id}' AND hsevsid = '{vsid}'
+        """)
+        result = conn.execute(query)
+        row = result.fetchone()
+        if row:
+            return row[0].encode('ISO-8859-1').decode('cp949')
+        else:
+            return None
+
 #find 함수 모음
 def find_clid(ptclid):
     with engine.connect() as conn:
