@@ -23,6 +23,7 @@ engine = create_engine(f"mssql+pymssql://{login_dta['server']}/{login_dta['datab
 async def response_from_b():
     return {"message": "This is a response from B 컴퓨터."}
 
+
 ##오늘의 건강검진 환자 불러오기
 @app.get("/today_patients_list")
 def today_patients_list():
@@ -58,6 +59,60 @@ def today_patients_list():
             })
 
         return pt_info
+#find 함수 모음
+def find_clid(ptclid):
+    with engine.connect() as conn:
+        query = text(f"""
+            SELECT cllname
+            FROM dbo.cl
+            WHERE clid = '{ptclid}'
+        """)
+        result = conn.execute(query)
+        row = result.fetchone()
+        if row:
+            return row[0].encode('ISO-8859-1').decode('cp949')
+        else:
+            return None
 
+def find_brid(ptbrid):
+    with engine.connect() as conn:
+        query = text(f"""
+            SELECT brdesc,brspid
+            FROM dbo.br
+            WHERE brid = '{ptbrid}'
+        """)
+        result = conn.execute(query)
+        row = result.fetchone()
+        if row:
+            return [row[0].encode('ISO-8859-1').decode('cp949'),row[1]]
+        else:
+            return None
+
+def find_staf(hplstf) :
+    with engine.connect() as conn:
+        query = text(f"""
+            SELECT emname
+            FROM dbo.em
+            WHERE emcode = '{hplstf}'
+        """)
+        result = conn.execute(query)
+        row = result.fetchone()
+        if row:
+            return row[0].encode('ISO-8859-1').decode('cp949')
+        else:
+            return None
+
+def find_xid(ptxid):
+    with engine.connect() as conn:
+        query = text(f"""
+            SELECT sxdesc FROM dbo.sx WHERE sxid = '{ptxid}'
+        """)
+        result = conn.execute(query)
+        row = result.fetchone()
+        if row:
+            return row[0].encode('ISO-8859-1').decode('cp949').strip()
+        else:
+            return None
+        
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8011)
