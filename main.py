@@ -78,6 +78,8 @@ def today_patients_list():
 @app.get('/{patient_id}/{vsid}')
 def patient_info(patient_id,vsid):
     prompt = f"""
+    너는 '작업 명령'에 따라서 '작업 데이터'를 작업한 다음에 '결과 명령'에 따라서 '결과 포멧'에 맞춰서 결과물을 리턴해주면 돼.
+
     작업 명령 :
     1. 너는 일종의 요약 작업을 진행 해야해\
     2. 요약 작업을 진행하는 데이터의 종류는 수의사가 건강검진을 진행한 동물의 전자차트 내 SOAP 데이터야\
@@ -98,8 +100,7 @@ def patient_info(patient_id,vsid):
     영상검사 결과 : 
     전체 결과 및 관리 방안 :
     -
-    니가 작업을 수행할 데이터는 아래와 같아.
-    '''{patient_subject(patient_id,vsid)}'''
+    작업데이터 : '''{patient_subject(patient_id,vsid)}'''
     """
     examresult = {
         'subject' : patient_subject(patient_id,vsid),
