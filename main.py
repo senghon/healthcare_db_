@@ -91,7 +91,9 @@ def patient_info(patient_id,vsid):
     영상검사 결과 : 
     전체 결과 및 관리 방안 :
     -
-    니가 작업을 수행할 데이터는 '''{patient_subject(patient_id,vsid)}'''
+    니가 작업을 수행할 데이터는 아래와 같아.
+    '''{patient_subject(patient_id,vsid)}'''
+    혈액검사 결과의 경우 따로 언급이 없다면 이상이 없다고 말하면 돼.
     """
     examresult = {
         'subject' : patient_subject(patient_id,vsid),
