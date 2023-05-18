@@ -17,7 +17,7 @@ def get_completion(prompt, model="gpt-3.5-turbo-0301"):
     response = openai.ChatCompletion.create(
         model=model,
         messages=messages,
-        temperature=0.7, # this is the degree of randomness of the model's output
+        temperature=0.6, # this is the degree of randomness of the model's output
     )
     return response.choices[0].message["content"]
 
@@ -38,14 +38,14 @@ async def response_from_b():
 
 
 ##오늘의 건강검진 환자 불러오기
-@app.get("/today_patients_list")
-def today_patients_list():
+@app.get("/today_patients_list/{date}")
+def today_patients_list(date):
     with engine.connect() as conn:
 #         # dbo.hpl에서 hplptid, hplrdt,hplstf,hplvsid 추출
-        query1 = text("""
+        query1 = text(f"""
             SELECT hplptid,hplrdt,hplstf,hplvsid
             FROM dbo.hpl
-            WHERE CONVERT(date, hplrdt) = '2022-06-20' AND hplplid = 12000
+            WHERE CONVERT(date, hplrdt) = '{date}' AND hplplid = 12000
         """)
         result1 = conn.execute(query1)
         rows1 = result1.fetchall()
@@ -78,17 +78,17 @@ def today_patients_list():
 @app.get('/{patient_id}/{vsid}')
 def patient_info(patient_id,vsid):
     prompt = f"""
-    너는 '작업 명령'에 따라서 '작업 데이터'를 작업한 다음에 '결과 명령'에 따라서 '결과 포멧'에 맞춰서 결과물을 리턴해주면 돼.
+    너는 '작업 명령'에 따라서 '작업 데이터'를 작업한 다음에 '결과 명령'에 따라서 '결과 포멧'으로 결과물을 리턴해주면 돼.
     
     작업 목표 :
-    수의사가 건강검진을 진행한 반려동물 건강검진 결과를 보호자에게 설명하는 리포트를 작성.
+    수의사가 건강검진을 진행한 반려동물 건강검진 결과각 항목을 보호자에게 설명하는 리포트를 작성.
 
     작업 명령 :
-    1. 너는 일종의 요약 작업을 진행 해야해\
-    2. 작업을 진행하는 데이터의 종류는 수의사가 건강검진을 진행한 동물의 전자차트 내 SOAP 데이터야\
-    3. SOAP중 S(subject)는 제외해야해. 수의사가 보호자로부터 문진한 내용은 요약에서 제외해.\
-     3-1. 보통 차트데이터 구성은 S(subject)가 제일 위에 위치해. 이 부분이 보호자로부터 들은 환자 데이터이므로 작업에서 제외 해야해.\
-     3-2. 보통 object,assesment,plan 데이터는 데이터마다 o),a),p) 혹은 o>,a>,p>로 구분점을 두고 있어.\
+    1. 작업 데이터에서 수의사가 반려동물을 검사한 데이터를 찾는다(신체검사 소견,혈액검사 소견,영상검사 소견).
+        1-1 수의사가 검사한 객관적인 데이터이어야 한다.
+    2. 따라서 전자차트 SOAP중, S(subject)에 해당하는 보호자 문진항목,보호자로부터 들은 환자의 정보들은 모두 제외 해야 한다.
+        2-1. 보통 차트데이터 구성은 S(subject)가 제일 위에 위치해. 이 부분이 보호자로부터 들은 환자 데이터이므로 작업에서 제외 해야해.\
+        2-2. 보통 object,assesment,plan 데이터는 데이터마다 o),a),p) 혹은 o>,a>,p>로 구분점을 두고 있어.\
     4. 너는 이 데이터를 받아서 신체검사결과,혈액검사결과,영상검사결과,전체 결과 및 관리방안 카테고리로 요약해 줘야해.\
     
     결과 명령 :
