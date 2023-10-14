@@ -66,8 +66,8 @@ def today_patients_list(date):
                 "ptname": row2[1].encode('ISO-8859-1').decode('cp949').strip(),
                 "ptsxid": find_xid(row2[2]),
                 "ptclid": find_clid(row2[3]),
-                "ptbrid": find_brid(row2[4]),
-                "hplrdt": str(row[1]), # datetime 객체를 str로 변환
+                "ptbrid": find_brid(row2[4])[0], # [bridname,speices code] 라서 앞에것만 출력.
+                "hplrdt": str(row[1])[:10], # datetime 객체를 str로 변환, 앞의 10글자만 따서 yyyy-mm-dd만 추출
                 "emname":find_staf(row[2]),
                 "vsid" : row[3] #visd는 row의 3번째에 위치.
             })
