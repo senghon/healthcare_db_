@@ -5,11 +5,18 @@ import openai
 import os
 import uvicorn
 import pymssql
+from pyngrok import conf,ngrok
 
 #유비콘 실행 명령어. : 0.0.0.0 접속시 http://현재pc ip:8011/docs 로 접속하면 됨.
 #uvicorn main:app --host 0.0.0.0 --port 8011
 app = FastAPI()
 
+conf.get_default().region = "jp"
+conf.get_default().auth_token = "2Xa6fJKplPqHly5sJhyITG0MqY6_7Hk6YCyzwGhoDN725t8BZ"
+http_tunnel = ngrok.connect(8011,domain='magical-warthog-direct.ngrok-free.app')
+tunnels = ngrok.get_tunnels()
+for kk in tunnels:
+    print(kk)
 #openai key
 # openai.api_key = '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'
 # ##openai
@@ -204,6 +211,3 @@ def find_xid(ptxid):
             return row[0].encode('ISO-8859-1').decode('cp949').strip()
         else:
             return None
-        
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8011)
